@@ -1,0 +1,61 @@
+# OpenTelemetry Collector config that receives OTLP
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: "0.0.0.0:4317"
+      http:
+        endpoint: "0.0.0.0:4318"
+
+processors:
+  batch:
+    send_batch_size: 1024
+    timeout: 5s
+
+  attributes/scrape:
+    actions:
+      - key: environment
+        value: production
+        action: insert
+
+      - key: process.command_line
+        action: delete
+      - pattern: credit_card
+        action: delete
+      - pattern: password
+        action: delete
+
+      - pattern: email
+        action: hash
+      - pattern: vatnumber
+        action: hash
+
+exporters:
+  otlp/jaeger:
+    endpoint: jaeger:4317
+    tls:
+      insecure: true
+
+  logging:
+    loglevel: debug
+    sampling_initial: 1
+    sampling_thereafter: 1
+
+extensions:
+  zpages: {}
+
+service:
+  extensions: [zpages]
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [attributes/scrape, batch]
+      exporters: [logging, otlp/jaeger]
+    metrics:
+      receivers: [otlp]
+      processors: [attributes/scrape, batch]
+      exporters: [logging]
+    logs:
+      receivers: [otlp]
+      processors: [attributes/scrape, batch]
+      exporters: [logging]

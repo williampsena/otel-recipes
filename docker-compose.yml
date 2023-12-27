@@ -1,0 +1,44 @@
+version: '3.7'
+
+name: otel
+
+services:  
+  otel:
+    networks:
+      - otel
+    ports:
+      - 14317:4317
+      - 14318:4318
+    image: otel/opentelemetry-collector-contrib:0.91.0
+    command: ["--config=/conf/otel-collector-config.yaml"]
+    privileged: true
+    volumes:
+      - "./otel/otel-collector-config.yaml:/conf/otel-collector-config.yaml"
+
+  jaeger:
+    image: jaegertracing/all-in-one:1
+    networks:
+      - otel
+    ports:
+      - 16687:16686
+
+  python:
+    build:
+      dockerfile: ./app/python/Dockerfile
+      args:
+        - PORT=8000
+    environment:
+      - PORT=8000
+      - OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED=true
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel:4317
+      - OTEL_RESOURCE_ATTRIBUTES=team=amercianas,cluster-name=gke,env=production,app=python,version=v1,brand=wl,flow=npf
+      - OTEL_SERVICE_NAME=python
+    networks:
+      - otel
+    ports:
+      - 8000:8000
+
+
+networks:
+  otel:
+    name: "otel"
