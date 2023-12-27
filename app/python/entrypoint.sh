@@ -10,4 +10,4 @@ opentelemetry-instrument \
     --logs_exporter console,otlp \
     --exporter_otlp_endpoint $OTEL_EXPORTER_OTLP_ENDPOINT \
     --service_name python \
-    flask run -p 8000 --host=0.0.0.0
+    flask run -p $PORT --host=0.0.0.0
