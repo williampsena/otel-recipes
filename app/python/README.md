@@ -23,5 +23,5 @@ opentelemetry-instrument \
     --logs_exporter console,otlp \
     --exporter_otlp_endpoint http://localhost:14317 \
     --service_name python \
-    flask run -p $PORT --host=0.0.0.0
+    flask run -p 8000 --host=0.0.0.0
 ```
