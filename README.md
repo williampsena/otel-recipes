@@ -2,6 +2,8 @@
 
 This repository has a proof-of-concept that uses the Opentelemetry processor to prevent revealing sensitive data.
 
+![sensitive data](images/sensitive.gif)
+
 > The following step is to generate samples in the programming languages used by Americanas, such as Java, Node.js, Elixir, and Ruby.
 
 # The example

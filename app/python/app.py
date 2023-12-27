@@ -24,3 +24,8 @@ def __send_metrics__():
         span.set_attribute("customer.password", "foo-bar-123456789")
         span.set_attribute("customer.vatnumber", "0000000191")
         span.set_attribute("customer.credit_card", "371449635398431")
+
+        span.set_attribute("db.user", "foo")
+        span.set_attribute("db.password", "bar")
+
+        span.set_attribute("account.email", "foo@bar.com")
