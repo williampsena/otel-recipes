@@ -15,6 +15,8 @@ The following example generates sensitive data: Email, Password, Credit Card, an
 - customer.credit_card
 - customer.vatnumber
 
+![example diagram](images/diagram.jpg)
+
 # Run
 
 ## How do I launch containers?
