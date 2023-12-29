@@ -42,3 +42,7 @@ curl http://localhost:8000
 http://localhost:16687
 
 ![Jaeger hashed sensitive data](images/jaeger-hash.png)
+
+# References
+
+[OpenTelemetry Configuration - Processors](https://opentelemetry.io/docs/collector/configuration/#processors)
