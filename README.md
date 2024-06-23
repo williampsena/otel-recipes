@@ -22,7 +22,7 @@ The following example generates sensitive data: Email, Password, Credit Card, an
 ## How do I launch containers?
 
 ```shell
-docker compose up -d
+docker compose --profile all up -d 
 ```
 
 ## Inspecting OTEL logs

@@ -2,7 +2,7 @@ name: otel
 
 services:  
   otel:
-    profiles: [otel]
+    profiles: [all, otel]
     networks:
       - otel
     ports:
@@ -15,15 +15,17 @@ services:
       - "./otel/otel-collector-config.yaml:/conf/otel-collector-config.yaml"
 
   jaeger:
-    profiles: [otel]
+    profiles: [all, otel]
     networks:
       - otel
     image: jaegertracing/all-in-one:1
     ports:
       - 16687:16686
+    depends_on:
+      - otel
 
   redis:
-    profiles: [db]
+    profiles: [all, db]
     networks:
       - otel
     image: bitnami/redis:7.2
@@ -33,7 +35,7 @@ services:
       - 6379:6379
 
   python:
-    profiles: [apps]
+    profiles: [all, apps]
     networks:
       - otel
     build:
@@ -46,9 +48,11 @@ services:
       - OTEL_SERVICE_NAME=python-otlp
     ports:
       - 8000:8000
+    depends_on:
+      - otel
 
   go:
-    profiles: [apps]
+    profiles: [all, apps]
     networks:
       - otel
     build:
@@ -60,6 +64,8 @@ services:
       - REDIS_URL=redis:6379
     ports:
       - 8001:8001
+    depends_on:
+      - otel
 
 
 networks:
