@@ -29,6 +29,8 @@ processors:
         action: hash
       - pattern: vatnumber
         action: hash
+      - pattern: document
+        action: hash
 
 exporters:
   otlp/jaeger:

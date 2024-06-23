@@ -1,12 +1,12 @@
 # About
 
-This repository has a proof-of-concept that uses the Opentelemetry processor to prevent revealing sensitive data.
+This repository contains OpenTelemetry recipes, such as the Otel processor to prevent revealing sensitive data.
+
+> The following diagram shows how traces are collected and processed before being sent to Jagger locally or via an external source such as DataDog.
 
 ![sensitive data](images/sensitive.gif)
 
-> The following step is to generate samples in the programming languages such as Java, Node.js, Elixir, and Ruby.
-
-# The example
+# Traces example
 
 The following example generates sensitive data: Email, Password, Credit Card, and VATNumber:
 

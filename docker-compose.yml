@@ -1,9 +1,8 @@
-version: '3.7'
-
 name: otel
 
 services:  
   otel:
+    profiles: [otel]
     networks:
       - otel
     ports:
@@ -16,25 +15,51 @@ services:
       - "./otel/otel-collector-config.yaml:/conf/otel-collector-config.yaml"
 
   jaeger:
-    image: jaegertracing/all-in-one:1
+    profiles: [otel]
     networks:
       - otel
+    image: jaegertracing/all-in-one:1
     ports:
       - 16687:16686
 
+  redis:
+    profiles: [db]
+    networks:
+      - otel
+    image: bitnami/redis:7.2
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+    ports:
+      - 6379:6379
+
   python:
+    profiles: [apps]
+    networks:
+      - otel
     build:
-      dockerfile: ./app/python/Dockerfile
+      dockerfile: ./app/python/Containerfile
     environment:
       - PORT=8000
       - OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED=true
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel:4317
-      - OTEL_RESOURCE_ATTRIBUTES=team=amercianas,cluster-name=gke,env=production,app=python,version=v1,brand=wl,flow=npf
-      - OTEL_SERVICE_NAME=python
-    networks:
-      - otel
+      - OTEL_RESOURCE_ATTRIBUTES=team=dev,cluster-name=local,env=dev
+      - OTEL_SERVICE_NAME=python-otlp
     ports:
       - 8000:8000
+
+  go:
+    profiles: [apps]
+    networks:
+      - otel
+    build:
+      dockerfile: ./app/go/Containerfile
+    environment:
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel:4317
+      - OTEL_RESOURCE_ATTRIBUTES=team=dev,cluster-name=local,env=dev
+      - OTEL_SERVICE_NAME=go-otlp
+      - REDIS_URL=redis:6379
+    ports:
+      - 8001:8001
 
 
 networks:
