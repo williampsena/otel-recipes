@@ -10,6 +10,9 @@ import (
 	"net/http"
 
 	"github.com/brianvoe/gofakeit/v7"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/redis/go-redis/extra/redisotel/v9"
 	"github.com/redis/go-redis/v9"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
@@ -17,14 +20,16 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
-	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/trace"
 )
 
 // Email counter metric
-var EmailMeter = otel.Meter("email")
+var emailCounter = promauto.NewCounter(prometheus.CounterOpts{
+	Name: "email_counter",
+	Help: "The total number of email sent",
+})
 
 // Shutdown handler is responsible for finishing trace.
 type ShutdownHandler func(context.Context) error
@@ -194,13 +199,7 @@ func sendEmailRoute(rdb *redis.Client) func(w http.ResponseWriter, r *http.Reque
 			),
 		)
 
-		counter, _ := EmailMeter.Int64Counter(
-			"send_email",
-			metric.WithUnit("1"),
-			metric.WithDescription("Just a email counter"),
-		)
-
-		counter.Add(r.Context(), 1, metric.WithAttributes(attribute.String("foo", "bar")))
+		emailCounter.Inc()
 
 		response := fmt.Sprintf("📨 The email was queued successfully: %v", email.Subject)
 
@@ -228,6 +227,7 @@ func main() {
 
 	otelHandler := otelhttp.NewHandler(http.HandlerFunc(sendEmailRoute(rdb)), "SendEmail")
 
+	http.Handle("/metrics", promhttp.Handler())
 	http.Handle("/send-email", otelHandler)
 
 	http.ListenAndServe(":8001", nil)

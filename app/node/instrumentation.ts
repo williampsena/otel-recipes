@@ -4,4 +4,5 @@ import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentation
 const sdk = new opentelemetry.NodeSDK({
   instrumentations: [getNodeAutoInstrumentations()]
 })
+
 sdk.start()
