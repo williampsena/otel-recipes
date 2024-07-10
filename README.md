@@ -31,6 +31,12 @@ docker compose --profile all up -d
 docker compose logs -f otel
 ```
 
+## Remove all containers
+
+```shell
+docker compose --profile all down --rmi all --volumes
+```
+
 ## Producing metrics
 
 ```shell
