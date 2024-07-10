@@ -1,0 +1,15 @@
+FROM docker.io/ruby:3.3.3-alpine3.20
+
+RUN apk update && apk add --virtual build-dependencies build-base
+
+RUN gem install bundler
+
+WORKDIR /app
+
+COPY app/ruby/Gemfile app/ruby/Gemfile.lock /app
+
+RUN bundle install
+
+COPY app/ruby /app
+
+CMD [ "ruby", "server.rb" ]

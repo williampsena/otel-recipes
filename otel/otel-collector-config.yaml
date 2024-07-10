@@ -31,10 +31,23 @@ processors:
         action: hash
       - pattern: document
         action: hash
+      - pattern: x_secret_key
+        action: hash
 
 exporters:
   otlp/jaeger:
     endpoint: jaeger:4317
+    tls:
+      insecure: true
+
+  loki:
+    endpoint: http://loki:3100/loki/api/v1/push
+
+  prometheus:
+    endpoint: "0.0.0.0:18888"
+
+  otlp/tempo:
+    endpoint: "tempo:4317"
     tls:
       insecure: true
 
@@ -52,12 +65,12 @@ service:
     traces:
       receivers: [otlp]
       processors: [attributes/scrape, batch]
-      exporters: [logging, otlp/jaeger]
+      exporters: [otlp/jaeger, otlp/tempo]
     metrics:
       receivers: [otlp]
       processors: [attributes/scrape, batch]
-      exporters: [logging]
+      exporters: [prometheus]
     logs:
       receivers: [otlp]
       processors: [attributes/scrape, batch]
-      exporters: [logging]
+      exporters: [loki]

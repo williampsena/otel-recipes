@@ -13,6 +13,8 @@ services:
     privileged: true
     volumes:
       - "./otel/otel-collector-config.yaml:/conf/otel-collector-config.yaml"
+    depends_on:
+      - loki
 
   jaeger:
     profiles: [all, otel]
@@ -23,6 +25,68 @@ services:
       - 16687:16686
     depends_on:
       - otel
+
+  prometheus:
+    profiles: [all, otel]
+    networks:
+      - otel
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - prometheus-data:/prometheus
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+
+  grafana:
+    profiles: [all, grafana]
+    networks:
+      - otel
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana-data:/var/lib/grafana
+    depends_on:
+      - loki
+      - tempo
+
+  loki:
+    profiles: [all, grafana]
+    networks:
+      - otel
+    image: grafana/loki:latest
+    command: [ "-config.file=/etc/loki/local-config.yaml" ]
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./grafana/loki-config.yaml:/etc/loki/local-config.yaml
+      - loki-rules-data:/etc/loki/rules/fake
+
+  promtail:
+    profiles: [all, grafana]
+    networks:
+      - otel
+    image: grafana/promtail:latest
+    volumes:
+      - ./grafana/promtail-config.yaml:/etc/promtail/config.yml
+      - /var/log:/var/log
+      - /var/lib/docker/containers:/var/lib/docker/containers
+    depends_on:
+      - loki
+
+  tempo:
+    profiles: [all, grafana]
+    networks:
+      - otel
+    image: grafana/tempo:latest
+    command: [ "-config.file=/etc/tempo/tempo.yaml" ]
+    ports:
+      - "3200:3200"
+    volumes:
+      - ./grafana/tempo-config.yaml:/etc/tempo/tempo.yaml
+      - tempo-data:/var/tempo
 
   redis:
     profiles: [all, db]
@@ -67,6 +131,46 @@ services:
     depends_on:
       - otel
 
+  ruby:
+    profiles: [all, apps]
+    networks:
+      - otel
+    build:
+      dockerfile: ./app/ruby/Containerfile
+    environment:
+      - PORT=8002
+      - OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=http://otel:4318/v1/traces
+      - OTEL_RESOURCE_ATTRIBUTES=team=dev,cluster-name=local,env=dev
+      - OTEL_SERVICE_NAME=ruby-otlp
+      - OTEL_TRACES_EXPORTER=otlp
+    ports:
+      - 8002:8002
+    depends_on:
+      - otel
+
+  node:
+    profiles: [all, apps]
+    networks:
+      - otel
+    build:
+      dockerfile: ./app/node/Containerfile
+    environment:
+      - PORT=8003
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel:4318
+      - OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=http://otel:4318/v1/traces
+      - OTEL_RESOURCE_ATTRIBUTES=team=dev,cluster-name=local,env=dev
+      - OTEL_SERVICE_NAME=node-otlp
+      - OTEL_TRACES_EXPORTER=otlp
+    ports:
+      - 8003:8003
+    depends_on:
+      - otel
+
+volumes:
+  tempo-data:
+  loki-rules-data:
+  grafana-data:
+  prometheus-data:
 
 networks:
   otel:

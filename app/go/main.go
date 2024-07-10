@@ -12,13 +12,19 @@ import (
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/redis/go-redis/extra/redisotel/v9"
 	"github.com/redis/go-redis/v9"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
+	"go.opentelemetry.io/otel/metric"
+	"go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/trace"
 )
+
+// Email counter metric
+var EmailMeter = otel.Meter("email")
 
 // Shutdown handler is responsible for finishing trace.
 type ShutdownHandler func(context.Context) error
@@ -70,7 +76,7 @@ func setupTracer(ctx context.Context) (ShutdownHandler, error) {
 		return nil, err
 	}
 
-	tp := buildTracer(exporter)
+	tp := buildTracer(ctx, exporter)
 
 	otel.SetTracerProvider(tp)
 
@@ -78,9 +84,20 @@ func setupTracer(ctx context.Context) (ShutdownHandler, error) {
 }
 
 // Build an open telemetry tracer
-func buildTracer(exporter *otlptrace.Exporter) *sdktrace.TracerProvider {
+func buildTracer(ctx context.Context, exporter *otlptrace.Exporter) *sdktrace.TracerProvider {
+	res, err := resource.New(ctx,
+		resource.WithAttributes(
+			attribute.String("service.name", os.Getenv("OTEL_SERVICE_NAME")),
+		),
+	)
+
+	if err != nil {
+		panic(err)
+	}
+
 	return sdktrace.NewTracerProvider(
 		sdktrace.WithBatcher(exporter),
+		sdktrace.WithResource(res),
 	)
 }
 
@@ -177,10 +194,24 @@ func sendEmailRoute(rdb *redis.Client) func(w http.ResponseWriter, r *http.Reque
 			),
 		)
 
+		counter, _ := EmailMeter.Int64Counter(
+			"send_email",
+			metric.WithUnit("1"),
+			metric.WithDescription("Just a email counter"),
+		)
+
+		counter.Add(r.Context(), 1, metric.WithAttributes(attribute.String("foo", "bar")))
+
+		response := fmt.Sprintf("📨 The email was queued successfully: %v", email.Subject)
+
+		span.AddEvent("log-message", trace.WithAttributes(attribute.String("message", message)))
+
+		log.Println(message)
+
 		span.End()
 
 		w.WriteHeader(http.StatusCreated)
-		w.Write([]byte("📨 The email was queued successfully"))
+		w.Write([]byte(response))
 	}
 }
 
@@ -195,7 +226,9 @@ func main() {
 
 	defer doShutdown(ctx, shutdown)
 
-	http.HandleFunc("/send-email", sendEmailRoute(rdb))
+	otelHandler := otelhttp.NewHandler(http.HandlerFunc(sendEmailRoute(rdb)), "SendEmail")
+
+	http.Handle("/send-email", otelHandler)
 
 	http.ListenAndServe(":8001", nil)
 }

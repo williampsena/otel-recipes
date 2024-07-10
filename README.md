@@ -1,6 +1,6 @@
 # About
 
-This repository contains OpenTelemetry recipes, such as the Otel processor to prevent revealing sensitive data.
+This repository contains OpenTelemetry recipes, such as the OTel processor to prevent revealing sensitive data.
 
 > The following diagram shows how traces are collected and processed before being sent to Jagger locally or via an external source such as DataDog.
 
@@ -42,6 +42,18 @@ curl http://localhost:8000
 http://localhost:16687
 
 ![Jaeger hashed sensitive data](images/jaeger-hash.png)
+
+## Grafana
+
+http://localhost:3000/
+
+# Generating data
+
+The following script generates traces, logs, and metrics.
+
+```shell
+bash scripts/do-requests.sh 
+```
 
 # References
 
