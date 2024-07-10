@@ -3,7 +3,18 @@
 require 'sinatra'
 require 'sinatra/required_params'
 require_relative 'config/initializers/opentelemetry'
+require 'prometheus/client'
+require "prometheus/middleware/collector"
+require "prometheus/middleware/exporter"
 require './client'
+
+prometheus = Prometheus::Client.registry
+poke_image_requests = Prometheus::Client::Counter.new(:poke_image_requests,
+                                                      docstring: 'A counter of HTTP pokemon image requests made')
+prometheus.register(poke_image_requests)
+
+use Prometheus::Middleware::Collector
+use Prometheus::Middleware::Exporter
 
 set :bind, '0.0.0.0'
 set :port, ENV.fetch('PORT', '8002')
@@ -25,6 +36,7 @@ get '/pokemon/:name/image' do
     image_response = client.download_image(image_url)
 
     if image_response.ok?
+      poke_image_requests.increment
       content_type 'image/png'
       return image_response.body
     end

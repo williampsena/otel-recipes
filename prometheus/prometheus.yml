@@ -6,3 +6,8 @@ scrape_configs:
     scrape_interval: 10s
     static_configs:
       - targets: ['otel:18888']
+
+  - job_name: 'poke-api-collector'
+    scrape_interval: 10s
+    static_configs:
+      - targets: ['ruby:8002']

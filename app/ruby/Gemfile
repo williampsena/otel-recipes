@@ -14,3 +14,5 @@ gem 'rackup', '~> 2.1'
 gem 'opentelemetry-exporter-otlp', '~> 0.28.0'
 gem 'opentelemetry-instrumentation-all', '~> 0.62.0'
 gem 'opentelemetry-sdk', '~> 1.4'
+
+gem 'prometheus-client', '~> 4.2'
