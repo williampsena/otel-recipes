@@ -21,7 +21,7 @@ services:
     profiles: [all, otel]
     networks:
       - otel
-    image: jaegertracing/all-in-one:1
+    image: jaegertracing/all-in-one:1.58.0
     ports:
       - 16687:16686
     depends_on:
@@ -126,8 +126,6 @@ services:
       dockerfile: ./app/go/Containerfile
     environment:
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel:4317
-      - OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=http://otel:4317/v1/traces
-      - OTEL_EXPORTER_OTLP_METRICS_ENDPOINT=http://otel:4317/v1/metrics
       - OTEL_RESOURCE_ATTRIBUTES="service.name=go-otlp,team=dev,cluster-name=local,env=dev"
       - OTEL_SERVICE_NAME=go-otlp
       - REDIS_URL=redis:6379
