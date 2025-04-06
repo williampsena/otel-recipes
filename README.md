@@ -58,7 +58,7 @@ http://localhost:3000/
 The following script generates traces, logs, and metrics.
 
 ```shell
-bash scripts/do-requests.sh 
+bash scripts/do-requests.sh
 ```
 
 # References

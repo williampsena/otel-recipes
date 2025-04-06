@@ -9,7 +9,7 @@ services:
       - 14317:4317
       - 14318:4318
       - 18888:18888
-    image: otel/opentelemetry-collector-contrib:0.91.0
+    image: otel/opentelemetry-collector-contrib:0.123.0
     command: ["--config=/conf/otel-collector-config.yaml"]
     privileged: true
     volumes:
@@ -21,7 +21,7 @@ services:
     profiles: [all, otel]
     networks:
       - otel
-    image: jaegertracing/all-in-one:1.58.0
+    image: jaegertracing/all-in-one:1.68.0
     ports:
       - 16687:16686
     depends_on:
@@ -31,7 +31,7 @@ services:
     profiles: [all, otel]
     networks:
       - otel
-    image: prom/prometheus:latest
+    image: prom/prometheus:v3.2.1
     ports:
       - "9090:9090"
     volumes:
@@ -42,7 +42,7 @@ services:
     profiles: [all, grafana]
     networks:
       - otel
-    image: grafana/grafana:latest
+    image: grafana/grafana:11.6.0
     ports:
       - "3000:3000"
     environment:
@@ -57,7 +57,7 @@ services:
     profiles: [all, grafana]
     networks:
       - otel
-    image: grafana/loki:latest
+    image: grafana/loki:3
     command: [ "-config.file=/etc/loki/local-config.yaml" ]
     ports:
       - "3100:3100"
@@ -69,7 +69,7 @@ services:
     profiles: [all, grafana]
     networks:
       - otel
-    image: grafana/promtail:latest
+    image: grafana/promtail:3
     volumes:
       - ./grafana/promtail-config.yaml:/etc/promtail/config.yml
       - /var/log:/var/log
