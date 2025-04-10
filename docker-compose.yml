@@ -76,6 +76,7 @@ services:
       - /var/lib/docker/containers:/var/lib/docker/containers
     depends_on:
       - loki
+      - prometheus
 
   tempo:
     profiles: [all, grafana]
